@@ -13,7 +13,7 @@ namespace CurrencyBank
 {
 	public class Commands
 	{
-		public static void CBank(CommandArgs args)
+		public static async void CBank(CommandArgs args)
 		{
 			BankAccount account;
 
@@ -35,7 +35,7 @@ namespace CurrencyBank
 			else
 			{
 				if (string.IsNullOrWhiteSpace(match.Groups[1].Value))
-					SendInfo(args.Player, BankMain.Bank.FindAccount(args.Player.UserAccountName));
+					SendInfo(args.Player, await BankMain.Bank.FindAccount(args.Player.UserAccountName));
 				else
 				{
 					switch (match.Groups[1].Value)
@@ -46,7 +46,7 @@ namespace CurrencyBank
 						case "balance":
 							if (!args.Player.RealPlayer)
 								args.Player.SendErrorMessage("You must use this command in-game.");
-							else if ((account = BankMain.Bank.FindAccount(args.Player.UserAccountName)) == null)
+							else if ((account = await BankMain.Bank.FindAccount(args.Player.UserAccountName)) == null)
 								args.Player.SendErrorMessage("You must have a bank account to use this command.");
 							else
 								args.Player.SendInfoMessage("[CurrencyBank] ID: {0:000000} | Balance: {1}", account.ID,
@@ -71,7 +71,7 @@ namespace CurrencyBank
 							if (string.IsNullOrWhiteSpace(accountName))
 								args.Player.SendErrorMessage("Syntax: {0}cbank give <account name or ID> <amount> [msg]",
 									TShock.Config.CommandSpecifier);
-							else if ((recipient = BankMain.Bank.FindAccount(accountName)) == null)
+							else if ((recipient = await BankMain.Bank.FindAccount(accountName)) == null)
 								args.Player.SendErrorMessage("Invalid bank account!");
 							else if (!ulong.TryParse(match.Groups[4].Value, out value) || value == 0 || value > long.MaxValue)
 								args.Player.SendErrorMessage("Invalid amount!");
@@ -81,12 +81,13 @@ namespace CurrencyBank
 								try
 								{
 									BankMain.Bank.ChangeByAsync(recipient.AccountName, (long)value);
+									// Reminder: Once silent specifiers are out, make silent exclude this message for self givings
 									args.Player.SendSuccessMessage("Gave {0} to {1}. New balance: {0}.",
 										FormatMoney((long)value), recipient.AccountName, FormatMoney(recipient.Balance));
 
 									// Notify the recipient
-									SendNotice((account = BankMain.Bank.FindAccount(args.Player.UserAccountName)) ??
-										BankAccount.Server, recipient, (long)value, message);
+									SendNotice((account = await BankMain.Bank.FindAccount(args.Player.UserAccountName)) ??
+										BankAccount.Server, recipient, (long)value, message, false);
 								}
 								catch (NullReferenceException)
 								{
@@ -177,7 +178,7 @@ namespace CurrencyBank
 							if (string.IsNullOrWhiteSpace(accountName))
 								args.Player.SendInfoMessage("Syntax: {0}cbank info <account name or ID>",
 									TShock.Config.CommandSpecifier);
-							else if ((account = BankMain.Bank.FindAccount(accountName)) == null)
+							else if ((account = await BankMain.Bank.FindAccount(accountName)) == null)
 								args.Player.SendErrorMessage("Invalid bank account!");
 							else
 							{
@@ -203,11 +204,11 @@ namespace CurrencyBank
 								match.Groups[2].Value;
 							if (!args.Player.RealPlayer)
 								args.Player.SendErrorMessage("You must use this command in-game.");
-							else if ((account = BankMain.Bank.FindAccount(args.Player.UserAccountName)) == null)
+							else if ((account = await BankMain.Bank.FindAccount(args.Player.UserAccountName)) == null)
 								args.Player.SendErrorMessage("You must have a bank account to use this command.");
 							else if (string.IsNullOrWhiteSpace(accountName))
 								args.Player.SendErrorMessage("Syntax: {0}cbank pay <account name or ID> <amount> [msg]");
-							else if ((recipient = BankMain.Bank.FindAccount(accountName)) == null)
+							else if ((recipient = await BankMain.Bank.FindAccount(accountName)) == null)
 								args.Player.SendErrorMessage("Invalid bank account!");
 							else if (!ulong.TryParse(match.Groups[4].Value, out value) || value == 0 || value > long.MaxValue)
 								args.Player.SendErrorMessage("Invalid amount!");
@@ -256,7 +257,7 @@ namespace CurrencyBank
 							if (string.IsNullOrWhiteSpace(accountName))
 								args.Player.SendErrorMessage("Syntax: {0}cbank take <account name or ID> <amount> [msg]",
 									TShock.Config.CommandSpecifier);
-							else if ((target = BankMain.Bank.FindAccount(accountName)) == null)
+							else if ((target = await BankMain.Bank.FindAccount(accountName)) == null)
 								args.Player.SendErrorMessage("Invalid bank account!");
 							else if (!ulong.TryParse(match.Groups[4].Value, out value) || value == 0 || value > long.MaxValue)
 								args.Player.SendErrorMessage("Invalid amount!");
@@ -270,7 +271,7 @@ namespace CurrencyBank
 										FormatMoney((long)value), target.AccountName, FormatMoney(target.Balance));
 
 									// Notify the target
-									SendNotice((account = BankMain.Bank.FindAccount(args.Player.UserAccountName)) ??
+									SendNotice((account = await BankMain.Bank.FindAccount(args.Player.UserAccountName)) ??
 										BankAccount.Server, target, -(long)value, message);
 								}
 								catch (NullReferenceException)
@@ -639,7 +640,7 @@ namespace CurrencyBank
 				TShock.Config.CommandSpecifier);
 		}
 
-		private static void SendNotice(BankAccount sender, BankAccount target, long value, string message = "")
+		private static void SendNotice(BankAccount sender, BankAccount target, long value, string message = "", bool showSender = true)
 		{
 			var players = TShock.Utils.FindPlayer(target.AccountName);
 			if (players.Count < 1)
@@ -647,9 +648,16 @@ namespace CurrencyBank
 
 			TSPlayer player = players[0];
 			bool payment = Math.Sign(value) == -1;
-			player.SendInfoMessage("[CurrencyBank] {0} {1} {2} {3}{4}.", payment ? "Paid" : "Received",
-				FormatMoney(Math.Abs(value)), payment ? "to" : "from", sender.AccountName,
-				string.IsNullOrWhiteSpace(message) ? "" : " ({0})".SFormat(message));
+			var sb = new StringBuilder();
+			sb.Append("[CurrencyBank] ");
+			sb.Append(payment ? "Paid" : "Received").Append(' ');
+			sb.Append(FormatMoney(Math.Abs(value)));
+			if (showSender)
+				sb.Append(' ').Append(payment ? "to" : "from").Append(' ').Append(sender.AccountName);
+			if (!string.IsNullOrWhiteSpace(message))
+				sb.Append(' ').Append('(').Append(message).Append(')');
+
+			player.SendInfoMessage(sb.ToString());
 		}
 
 		private static string FormatMoney(long money)
