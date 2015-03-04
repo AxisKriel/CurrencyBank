@@ -26,7 +26,7 @@ using System.Runtime.InteropServices;
 //
 //      Major Version - Major overhauls
 //      Minor Version - New features
-//      Assert Version - Bugfixes
+//      Build Version - Bugfixes
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:

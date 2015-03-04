@@ -56,7 +56,7 @@ namespace CurrencyBank.DB
 			}
 		}
 
-		public async void ChangeByAsync(string accountIdent, long value)
+		public async Task ChangeByAsync(string accountIdent, long value)
 		{
 			BankAccount account = await FindAccount(accountIdent);
 			if (account == null)
