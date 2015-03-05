@@ -66,7 +66,7 @@ namespace CurrencyBank.DB
 				{
 					// Balances can't be negative at the moment
 					account.Balance = Math.Max(0, account.Balance + value);
-					if (db.Query("UPDATE BankAccounts SET Balance = @1 WHERE ID = @0", account.ID, value) != 1)
+					if (db.Query("UPDATE BankAccounts SET Balance = @1 WHERE ID = @0", account.ID, account.Balance) != 1)
 						throw new InvalidOperationException();
 				});
 		}

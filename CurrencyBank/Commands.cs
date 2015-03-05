@@ -82,7 +82,7 @@ namespace CurrencyBank
 								{
 									await BankMain.Bank.ChangeByAsync(recipient.AccountName, (long)value);
 									// Reminder: Once silent specifiers are out, make silent exclude this message for self givings
-									args.Player.SendSuccessMessage("Gave {0} to {1}. New balance: {0}.",
+									args.Player.SendSuccessMessage("Gave {0} to {1}. New balance: {2}.",
 										FormatMoney((long)value), recipient.AccountName, FormatMoney(recipient.Balance));
 
 									// Notify the recipient
@@ -267,7 +267,7 @@ namespace CurrencyBank
 								try
 								{
 									await BankMain.Bank.ChangeByAsync(target.AccountName, -(long)value);
-									args.Player.SendSuccessMessage("Took {0} from {1}. New balance: {0}.",
+									args.Player.SendSuccessMessage("Took {0} from {1}. New balance: {2}.",
 										FormatMoney((long)value), target.AccountName, FormatMoney(target.Balance));
 
 									// Notify the target
