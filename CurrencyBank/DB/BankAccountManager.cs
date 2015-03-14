@@ -15,10 +15,11 @@ namespace CurrencyBank.DB
 	public class BankAccountManager
 	{
 		private IDbConnection db;
+		private object syncLock = new object();
 
 		public static readonly int MaxAccounts = 999999;
 
-		public List<BankAccount> BankAccounts = new List<BankAccount>();
+		private List<BankAccount> bankAccounts = new List<BankAccount>();
 
 		public BankAccountManager(IDbConnection db)
 		{
@@ -27,47 +28,48 @@ namespace CurrencyBank.DB
 			var sql = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ?
 				(IQueryBuilder)new SqliteQueryCreator() : (IQueryBuilder)new MysqlQueryCreator());
 
-			sql.EnsureExists(new SqlTable("BankAccounts",
-				new SqlColumn("ID", MySqlDbType.Int32) { Primary = true, Unique = true },
+			bool table = sql.EnsureTableStructure(new SqlTable("BankAccounts",
+				new SqlColumn("ID", MySqlDbType.Int32) { Primary = true },
 				new SqlColumn("AccountName", MySqlDbType.Text),
 				new SqlColumn("Balance", MySqlDbType.Int64)));
+
+			if (!table)
+				TShock.Log.ConsoleError("currencybank: Failed to ensure table structure");
 
 			Task.Run(() => Reload());
 		}
 
-		public async Task<bool> AddAsync(BankAccount account)
+		public Task<bool> AddAsync(BankAccount account)
 		{
-			try
-			{
-				if (BankAccounts.Count >= MaxAccounts)
-					return false;
+			return Task.Run(() =>
+				{
+					if (bankAccounts.Count >= MaxAccounts)
+						return false;
 
-				return await Task.Run(() =>
+					lock (syncLock)
 					{
-						BankAccounts.Add(account);
-						return db.Query("INSERT INTO BankAccounts (ID, AccountName, Balance) VALUES (@0, @1, @2)",
+						bankAccounts.Add(account);
+						return db.Query("INSERT INTO `BankAccounts` (`ID, `AccountName`, `Balance`) VALUES (@0, @1, @2)",
 							account.ID, account.AccountName, account.Balance) == 1;
-					});
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex.ToString());
-				return false;
-			}
+					}
+				});
 		}
 
 		public async Task ChangeByAsync(string accountIdent, long value)
 		{
-			BankAccount account = await FindAccount(accountIdent);
+			BankAccount account = await GetAsync(accountIdent);
 			if (account == null)
 				throw new NullReferenceException();
 
 			await Task.Run(() =>
 				{
-					// Balances can't be negative at the moment
-					account.Balance = Math.Max(0, account.Balance + value);
-					if (db.Query("UPDATE BankAccounts SET Balance = @1 WHERE ID = @0", account.ID, account.Balance) != 1)
-						throw new InvalidOperationException();
+					lock (syncLock)
+					{
+						// Balances can't be negative at the moment
+						account.Balance = Math.Max(0, account.Balance + value);
+						if (db.Query("UPDATE `BankAccounts` SET `Balance` = @1 WHERE `ID` = @0", account.ID, account.Balance) != 1)
+							throw new InvalidOperationException();
+					}
 				});
 		}
 
@@ -75,15 +77,10 @@ namespace CurrencyBank.DB
 		{
 			return Task.Run(() =>
 				{
-					try
+					lock (syncLock)
 					{
-						BankAccounts.RemoveAll(a => a.AccountName == accountName);
-						return db.Query("DELETE FROM BankAccounts WHERE AccountName = @0", accountName) == 1;
-					}
-					catch (Exception ex)
-					{
-						Log.Error(ex.ToString());
-						return false;
+						bankAccounts.RemoveAll(a => a.AccountName == accountName);
+						return db.Query("DELETE FROM `BankAccounts` WHERE `AccountName` = @0", accountName) == 1;
 					}
 				});
 		}
@@ -94,7 +91,7 @@ namespace CurrencyBank.DB
 				{
 					try
 					{
-						BankAccounts.Clear();
+						bankAccounts.Clear();
 						using (var result = db.QueryReader("SELECT * FROM BankAccounts"))
 						{
 							while (result.Read())
@@ -102,15 +99,15 @@ namespace CurrencyBank.DB
 								BankAccount account = new BankAccount(result.Get<int>("ID"));
 								account.AccountName = result.Get<string>("AccountName");
 								account.Balance = result.Get<long>("Balance");
-								BankAccounts.Add(account);
+								bankAccounts.Add(account);
 							}
 						}
 						return true;
 					}
 					catch (Exception ex)
 					{
-						Log.ConsoleError("Error while loading CurrencyBank's database.\nCheck logs for details.");
-						Log.Error(ex.ToString());
+						TShock.Log.ConsoleError("Error while loading CurrencyBank's database. Check logs for details.");
+						TShock.Log.Error(ex.ToString());
 						return false;
 					}
 				});
@@ -118,10 +115,10 @@ namespace CurrencyBank.DB
 
 		public int GenID()
 		{
-			var used = BankAccounts.Select(a => a.ID).ToList();
+			var used = bankAccounts.Select(a => a.ID).ToList();
 
 			// If the account limit is reached, -1 is returned as an error code
-			if (BankAccounts.Count >= MaxAccounts)
+			if (bankAccounts.Count >= MaxAccounts)
 				return -1;
 
 			Random rand = new Random();
@@ -138,13 +135,13 @@ namespace CurrencyBank.DB
 			return -2;
 		}
 
-		public Task<BankAccount> FindAccount(string accountIdent)
+		public Task<BankAccount> GetAsync(string accountIdent)
 		{
 			int id;
 			if (int.TryParse(accountIdent, out id))
-				return Task.Run(() => BankAccounts.Find(a => a.ID == id));
+				return Task.Run(() => bankAccounts.Find(a => a.ID == id));
 			else
-				return Task.Run(() => BankAccounts.Find(a => a.AccountName == accountIdent));
+				return Task.Run(() => bankAccounts.Find(a => a.AccountName == accountIdent));
 		}
 	}
 }

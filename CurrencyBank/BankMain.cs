@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using CurrencyBank.DB;
 using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
@@ -15,7 +12,7 @@ using TShockAPI.Hooks;
 
 namespace CurrencyBank
 {
-	[ApiVersion(1, 16)]
+	[ApiVersion(1, 17)]
 	public class BankMain : TerrariaPlugin
 	{
 		public static BankAccountManager Bank { get; set; }
@@ -47,7 +44,7 @@ namespace CurrencyBank
 
 		public override Version Version
 		{
-			get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version; }
+			get { return Assembly.GetExecutingAssembly().GetName().Version; }
 		}
 
 		protected override void Dispose(bool disposing)
@@ -55,6 +52,7 @@ namespace CurrencyBank
 			if (disposing)
 			{
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
+				AccountHooks.AccountDelete -= OnAccountDelete;
 				GeneralHooks.ReloadEvent -= OnReload;
 				PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
 			}
@@ -63,6 +61,7 @@ namespace CurrencyBank
 		public override void Initialize()
 		{
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
+			AccountHooks.AccountDelete += OnAccountDelete;
 			GeneralHooks.ReloadEvent += OnReload;
 			PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
 		}
@@ -111,16 +110,22 @@ namespace CurrencyBank
 			Bank = new BankAccountManager(Db);
 		}
 
+		async void OnAccountDelete(AccountDeleteEventArgs e)
+		{
+			if (await Bank.DelAsync(e.User.Name))
+				TShock.Log.ConsoleInfo("[CurrencyBank] Deleted bank account for " + e.User.Name);
+		}
+
 		async void OnPlayerPostLogin(PlayerPostLoginEventArgs e)
 		{
 			BankAccount account;
 
-			if ((account = await Bank.FindAccount(e.Player.UserAccountName)) == null && e.Player.Group.HasPermission(Permissions.Permit))
+			if ((account = await Bank.GetAsync(e.Player.UserAccountName)) == null && e.Player.Group.HasPermission(Permissions.Permit))
 			{
 				if (!(await Bank.AddAsync(new BankAccount(e.Player.UserAccountName))))
-					Log.ConsoleError("[CurrencyBank] Unable to create bank account for {0}.", e.Player.UserAccountName);
+					TShock.Log.ConsoleError("[CurrencyBank] Unable to create bank account for " + e.Player.UserAccountName);
 				else
-					Log.ConsoleInfo("[CurrencyBank] Bank account created for {0}.", e.Player.UserAccountName);
+					TShock.Log.ConsoleInfo("[CurrencyBank] Bank account created for " + e.Player.UserAccountName);
 			}
 		}
 
