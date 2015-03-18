@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
-using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
 using TShockAPI;
 using TShockAPI.DB;
@@ -33,8 +30,8 @@ namespace CurrencyBank.DB
 				new SqlColumn("AccountName", MySqlDbType.Text),
 				new SqlColumn("Balance", MySqlDbType.Int64)));
 
-			if (!table)
-				TShock.Log.ConsoleError("currencybank: Failed to ensure table structure");
+			if (table)
+				TShock.Log.ConsoleInfo("currencybank-db: created table 'BankAccounts'");
 
 			Task.Run(() => Reload());
 		}
@@ -49,7 +46,7 @@ namespace CurrencyBank.DB
 					lock (syncLock)
 					{
 						bankAccounts.Add(account);
-						return db.Query("INSERT INTO `BankAccounts` (`ID, `AccountName`, `Balance`) VALUES (@0, @1, @2)",
+						return db.Query("INSERT INTO `BankAccounts` (`ID`, `AccountName`, `Balance`) VALUES (@0, @1, @2)",
 							account.ID, account.AccountName, account.Balance) == 1;
 					}
 				});
