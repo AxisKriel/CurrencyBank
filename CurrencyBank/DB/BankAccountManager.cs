@@ -134,6 +134,8 @@ namespace CurrencyBank.DB
 
 		public Task<BankAccount> GetAsync(string accountIdent)
 		{
+			if (string.IsNullOrWhiteSpace(accountIdent))
+				return null;
 			int id;
 			if (int.TryParse(accountIdent, out id))
 				return Task.Run(() => bankAccounts.Find(a => a.ID == id));

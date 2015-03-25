@@ -4,6 +4,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CurrencyBank.DB;
 using TShockAPI;
+using Wolfje.Plugins.Jist;
+using Wolfje.Plugins.Jist.Framework;
+using Wolfje.Plugins.Jist.stdlib;
+using System.Threading.Tasks;
 
 namespace CurrencyBank
 {
@@ -41,9 +45,7 @@ namespace CurrencyBank
 
 						case "bal":
 						case "balance":
-							if (!args.Player.RealPlayer)
-								args.Player.SendErrorMessage("You must use this command in-game.");
-							else if ((account = await BankMain.Bank.GetAsync(args.Player.UserAccountName)) == null)
+							if ((account = await BankMain.Bank.GetAsync(args.Player.UserAccountName)) == null)
 								args.Player.SendErrorMessage("You must have a bank account to use this command.");
 							else
 								args.Player.SendInfoMessage("[CurrencyBank] ID: {0:000000} | Balance: {1}", account.ID,
@@ -77,9 +79,10 @@ namespace CurrencyBank
 								try
 								{
 									await BankMain.Bank.ChangeByAsync(recipient.AccountName, (long)value);
+									BankMain.Log.Gain(recipient, (long)value, message);
 									// If the command is silent, don't send the self message, so that this command can be used in scripts
 									if (!args.Silent)
-										args.Player.SendSuccessMessage("Gave {0} to {1}. {1}'s balance: {2}",
+										args.Player.SendSuccessMessage("Gave {0} to {1}. {1}'s balance: {2}.",
 											FormatMoney((long)value), recipient.AccountName, FormatMoney(recipient.Balance));
 
 									// Notify the recipient
@@ -95,6 +98,10 @@ namespace CurrencyBank
 									args.Player.SendErrorMessage("Error performing transaction. Possible database corruption.");
 									args.Player.SendInfoMessage("Double check if there are multiple accounts with the same ID.");
 									args.Player.SendInfoMessage("You can try syncing the server with the database by using the reload command.");
+								}
+								catch (BankLogException ex)
+								{
+									TShock.Log.Error(ex.ToString());
 								}
 							}
 							return;
@@ -197,9 +204,7 @@ namespace CurrencyBank
 
 							//BankAccount recipient;
 							accountName = string.IsNullOrWhiteSpace(match.Groups[2].Value) ? match.Groups[3].Value : match.Groups[2].Value;
-							if (!args.Player.RealPlayer)
-								args.Player.SendErrorMessage("You must use this command in-game.");
-							else if ((account = await BankMain.Bank.GetAsync(args.Player.UserAccountName)) == null)
+							if ((account = await BankMain.Bank.GetAsync(args.Player.UserAccountName)) == null)
 								args.Player.SendErrorMessage("You must have a bank account to use this command.");
 							else if (string.IsNullOrWhiteSpace(accountName))
 								args.Player.SendErrorMessage("Syntax: {0}cbank pay <account name or ID> <amount> [msg]", specifier);
@@ -216,8 +221,9 @@ namespace CurrencyBank
 								{
 									await BankMain.Bank.ChangeByAsync(account.AccountName, -(long)value);
 									await BankMain.Bank.ChangeByAsync(recipient.AccountName, (long)value);
+									BankMain.Log.Payment(account, recipient, (long)value, message);
 									if (!args.Silent)
-										args.Player.SendInfoMessage("Paid {0} to {1}. Your balance: {2}",
+										args.Player.SendInfoMessage("Paid {0} to {1}. Your balance: {2}.",
 											FormatMoney((long)value), recipient.AccountName, FormatMoney(account.Balance));
 
 									// Notify the recipient
@@ -232,6 +238,10 @@ namespace CurrencyBank
 									args.Player.SendErrorMessage("Error performing transaction. Possible database corruption.");
 									args.Player.SendInfoMessage("Double check if there are multiple accounts with the same ID.");
 									args.Player.SendInfoMessage("You can try syncing the server with the database by using the reload command.");
+								}
+								catch (BankLogException ex)
+								{
+									TShock.Log.Error(ex.ToString());
 								}
 							}
 							return;
@@ -261,8 +271,9 @@ namespace CurrencyBank
 								try
 								{
 									await BankMain.Bank.ChangeByAsync(target.AccountName, -(long)value);
+									BankMain.Log.Loss(target, (long)value, message);
 									if (!args.Silent)
-										args.Player.SendSuccessMessage("Took {0} from {1}. {1}'s balance: {2}",
+										args.Player.SendSuccessMessage("Took {0} from {1}. {1}'s balance: {2}.",
 											FormatMoney((long)value), target.AccountName, FormatMoney(target.Balance));
 
 									// Notify the target
@@ -278,6 +289,10 @@ namespace CurrencyBank
 									args.Player.SendErrorMessage("Error performing transaction. Possible database corruption.");
 									args.Player.SendInfoMessage("Double check if there are multiple accounts with the same ID.");
 									args.Player.SendInfoMessage("You can try syncing the server with the database by using the reload command.");
+								}
+								catch (BankLogException ex)
+								{
+									TShock.Log.Error(ex.ToString());
 								}
 							}
 							return;
@@ -651,24 +666,36 @@ namespace CurrencyBank
 			player.SendInfoMessage(sb.ToString());
 		}
 
-		private static string FormatMoney(long money)
+		private static Func<long, string> FormatMoney = BankMain.FormatMoney;
+	}
+
+	public class JistCommands : stdlib_base
+	{
+		protected JistEngine engine;
+
+		public JistCommands(JistEngine engine)
+			: base(engine)
 		{
-			var sb = new StringBuilder();
-			if (BankMain.Config.UseShortName)
-				sb.Append(BankMain.Config.CurrencyNameShort);
+			this.engine = engine;
+			Provides = "currencybank";
+		}
 
-			sb.Append(money);
+		/// <summary>
+		/// Returns a CurrencyBank's account balance.
+		/// </summary>
+		/// <param name="accountName">The accountname to look for.</param>
+		/// <returns>The account's balance.</returns>
+		[JavascriptFunction("currencybank_get_balance")]
+		public long GetBalance(object accountName)
+		{
+			if (accountName == null || !(accountName is string))
+				return 0;
 
-			if (!BankMain.Config.UseShortName)
-			{
-				sb.Append(" ");
-				if (money != 1)
-					sb.Append(BankMain.Config.CurrencyNamePlural);
-				else
-					sb.Append(BankMain.Config.CurrencyName);
-			}
+			BankAccount account = BankMain.Bank.GetAsync(accountName as string).Result;
+			if (account == null)
+				return 0;
 
-			return sb.ToString();
+			return account.Balance;
 		}
 	}
 }

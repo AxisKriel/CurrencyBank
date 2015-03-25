@@ -2,6 +2,8 @@
 using System.Data;
 using System.IO;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using CurrencyBank.DB;
 using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
@@ -9,6 +11,8 @@ using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
 using TShockAPI.Hooks;
+using Wolfje.Plugins.Jist;
+using Wolfje.Plugins.Jist.Framework;
 
 namespace CurrencyBank
 {
@@ -21,10 +25,12 @@ namespace CurrencyBank
 
 		public static IDbConnection Db { get; set; }
 
+		public static BankLog Log { get; private set; }
+
 		public BankMain(Main game)
 			: base(game)
 		{
-
+			Order = 2;
 		}
 
 		public override string Author
@@ -55,6 +61,7 @@ namespace CurrencyBank
 				AccountHooks.AccountDelete -= OnAccountDelete;
 				GeneralHooks.ReloadEvent -= OnReload;
 				PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
+				JistPlugin.JavascriptFunctionsNeeded -= OnJsFunctionsNeeded;
 			}
 		}
 
@@ -64,6 +71,14 @@ namespace CurrencyBank
 			AccountHooks.AccountDelete += OnAccountDelete;
 			GeneralHooks.ReloadEvent += OnReload;
 			PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
+			JistPlugin.JavascriptFunctionsNeeded += OnJsFunctionsNeeded;
+
+		}
+
+		void OnJsFunctionsNeeded(object sender, JavascriptFunctionsNeededEventArgs e)
+		{
+			JistCommands commands = new JistCommands(e.Engine);
+			e.Engine.LoadLibrary(commands);
 		}
 
 		void OnInitialize(EventArgs e)
@@ -108,6 +123,7 @@ namespace CurrencyBank
 			#endregion
 
 			Bank = new BankAccountManager(Db);
+			Log = new BankLog(Path.Combine(TShock.SavePath, "CurrencyBank", "Logs", BankLog.GetLogName()));
 		}
 
 		async void OnAccountDelete(AccountDeleteEventArgs e)
@@ -139,6 +155,26 @@ namespace CurrencyBank
 			else
 				e.Player.SendErrorMessage("[CurrencyBank] Database reload failed! Check logs for details.");
 
+		}
+
+		public static string FormatMoney(long money)
+		{
+			var sb = new StringBuilder();
+			if (BankMain.Config.UseShortName)
+				sb.Append(BankMain.Config.CurrencyNameShort);
+
+			sb.Append(money);
+
+			if (!BankMain.Config.UseShortName)
+			{
+				sb.Append(" ");
+				if (money != 1)
+					sb.Append(BankMain.Config.CurrencyNamePlural);
+				else
+					sb.Append(BankMain.Config.CurrencyName);
+			}
+
+			return sb.ToString();
 		}
 	}
 }

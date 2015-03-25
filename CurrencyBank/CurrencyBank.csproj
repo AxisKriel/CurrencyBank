@@ -72,6 +72,10 @@
     <Reference Include="TShockAPI">
       <HintPath>bin\TShockAPI.dll</HintPath>
     </Reference>
+    <Reference Include="Wolfje.Plugins.Jist, Version=0.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Wolfje.Plugins.Jist.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BankMain.cs" />
@@ -79,6 +83,7 @@
     <Compile Include="Config.cs" />
     <Compile Include="DB\BankAccount.cs" />
     <Compile Include="DB\BankAccountManager.cs" />
+    <Compile Include="BankLog.cs" />
     <Compile Include="Permissions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
