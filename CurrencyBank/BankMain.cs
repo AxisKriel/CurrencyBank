@@ -3,7 +3,6 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using CurrencyBank.DB;
 using Mono.Data.Sqlite;
 using MySql.Data.MySqlClient;
@@ -26,6 +25,8 @@ namespace CurrencyBank
 		public static IDbConnection Db { get; set; }
 
 		public static BankLog Log { get; private set; }
+
+		internal static string Tag { get; } = TShock.Utils.ColorTag("CurrencyBank:", new Color(137, 73, 167));
 
 		public BankMain(Main game)
 			: base(game)
@@ -93,9 +94,9 @@ namespace CurrencyBank
 			#region Commands
 
 			TShockAPI.Commands.ChatCommands.Add(new Command(Commands.CBank, "cbank", "currencybank")
-				{
-					HelpText = "Perform payments and manage bank accounts."
-				});
+			{
+				HelpText = "Perform payments and manage bank accounts."
+			});
 
 			#endregion
 
@@ -129,7 +130,7 @@ namespace CurrencyBank
 		async void OnAccountDelete(AccountDeleteEventArgs e)
 		{
 			if (await Bank.DelAsync(e.User.Name))
-				TShock.Log.ConsoleInfo("[CurrencyBank] Deleted bank account for " + e.User.Name);
+				TShock.Log.ConsoleInfo($"CurrencyBank: Deleted bank account for \"{e.User.Name}\".");
 		}
 
 		async void OnPlayerPostLogin(PlayerPostLoginEventArgs e)
@@ -139,9 +140,9 @@ namespace CurrencyBank
 			if ((account = await Bank.GetAsync(e.Player.User.Name)) == null && e.Player.Group.HasPermission(Permissions.Permit))
 			{
 				if (!(await Bank.AddAsync(new BankAccount(e.Player.User.Name))))
-					TShock.Log.ConsoleError("[CurrencyBank] Unable to create bank account for " + e.Player.User.Name);
+					TShock.Log.ConsoleError($"CurrencyBank: Unable to create bank account for \"{e.Player.User.Name}\".");
 				else
-					TShock.Log.ConsoleInfo("[CurrencyBank] Bank account created for " + e.Player.User.Name);
+					TShock.Log.ConsoleInfo($"CurrencyBank: Bank account created for \"{e.Player.User.Name}\".");
 			}
 		}
 
@@ -151,9 +152,9 @@ namespace CurrencyBank
 			Config = Config.Read(cpath);
 
 			if (await Bank.Reload())
-				e.Player.SendSuccessMessage("[CurrencyBank] Database reloaded!");
+				e.Player.SendSuccessMessage($"{Tag} Database reloaded!");
 			else
-				e.Player.SendErrorMessage("[CurrencyBank] Database reload failed! Check logs for details.");
+				e.Player.SendErrorMessage($"{Tag} Database reload failed! Check logs for details.");
 
 		}
 
