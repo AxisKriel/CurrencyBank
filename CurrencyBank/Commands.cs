@@ -36,7 +36,7 @@ namespace CurrencyBank
 			else
 			{
 				if (string.IsNullOrWhiteSpace(match.Groups[1].Value))
-					SendInfo(args.Player, await BankMain.Bank.GetAsync(args.Player.UserAccountName));
+					SendInfo(args.Player, await BankMain.Bank.GetAsync(args.Player.User?.Name));
 				else
 				{
 					switch (match.Groups[1].Value)
@@ -45,7 +45,7 @@ namespace CurrencyBank
 
 						case "bal":
 						case "balance":
-							if ((account = await BankMain.Bank.GetAsync(args.Player.UserAccountName)) == null)
+							if ((account = await BankMain.Bank.GetAsync(args.Player.User?.Name)) == null)
 								args.Player.SendErrorMessage("You must have a bank account to use this command.");
 							else
 								args.Player.SendInfoMessage("[CurrencyBank] ID: {0:000000} | Balance: {1}", account.ID,
@@ -86,7 +86,7 @@ namespace CurrencyBank
 											FormatMoney((long)value), recipient.AccountName, FormatMoney(recipient.Balance));
 
 									// Notify the recipient
-									SendNotice((account = await BankMain.Bank.GetAsync(args.Player.UserAccountName)) ??
+									SendNotice((account = await BankMain.Bank.GetAsync(args.Player.User?.Name)) ??
 										BankAccount.Server, recipient, (long)value, message, false);
 								}
 								catch (NullReferenceException)
@@ -204,7 +204,7 @@ namespace CurrencyBank
 
 							//BankAccount recipient;
 							accountName = string.IsNullOrWhiteSpace(match.Groups[2].Value) ? match.Groups[3].Value : match.Groups[2].Value;
-							if ((account = await BankMain.Bank.GetAsync(args.Player.UserAccountName)) == null)
+							if ((account = await BankMain.Bank.GetAsync(args.Player.User?.Name)) == null)
 								args.Player.SendErrorMessage("You must have a bank account to use this command.");
 							else if (string.IsNullOrWhiteSpace(accountName))
 								args.Player.SendErrorMessage("Syntax: {0}cbank pay <account name or ID> <amount> [msg]", specifier);
@@ -277,7 +277,7 @@ namespace CurrencyBank
 											FormatMoney((long)value), target.AccountName, FormatMoney(target.Balance));
 
 									// Notify the target
-									SendNotice((account = await BankMain.Bank.GetAsync(args.Player.UserAccountName)) ??
+									SendNotice((account = await BankMain.Bank.GetAsync(args.Player.User?.Name)) ??
 										BankAccount.Server, target, -(long)value, message);
 								}
 								catch (NullReferenceException)
@@ -637,7 +637,9 @@ namespace CurrencyBank
 
 		private static void SendInfo(TSPlayer player, BankAccount account)
 		{
-			player.SendSuccessMessage("CurrencyBank v{0} by Enerdy", Assembly.GetExecutingAssembly().GetName().Version);
+			player.SendSuccessMessage("CurrencyBank v{0} by {1}",
+				Assembly.GetExecutingAssembly().GetName().Version,
+				TShock.Utils.ColorTag("Enerdy", new Color(0, 127, 255)));
 			if (account != null)
 				player.SendInfoMessage("You currently have {0}", FormatMoney(account.Balance));
 			player.SendInfoMessage(" - You may check your {0} balance at anytime using {1}cbank bal", BankMain.Config.CurrencyName, specifier);

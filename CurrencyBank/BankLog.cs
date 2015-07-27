@@ -66,7 +66,7 @@ namespace CurrencyBank
 		/// <param name="args">The parameters to be used to format the string.</param>
 		public void Write(string format, params object[] args)
 		{
-			Write(string.Format(format, args));
+			Write(String.Format(format, args));
 		}
 
 		/// <summary>
@@ -78,7 +78,7 @@ namespace CurrencyBank
 		public void Gain(BankAccount account, long amount, string message = "")
 		{
 			Write("{0} received {1}{2}", account.AccountName, BankMain.FormatMoney(amount),
-				string.IsNullOrWhiteSpace(message) ? "" : " with the message \"" + message + "\"");
+				String.IsNullOrWhiteSpace(message) ? "" : " with the message \"" + message + "\"");
 		}
 
 		/// <summary>
@@ -90,7 +90,7 @@ namespace CurrencyBank
 		public void Loss(BankAccount account, long amount, string message = "")
 		{
 			Write("{0} lost {1}{2}", account.AccountName, BankMain.FormatMoney(amount),
-				string.IsNullOrWhiteSpace(message) ? "" : " with the message \"" + message + "\"");
+				String.IsNullOrWhiteSpace(message) ? "" : " with the message \"" + message + "\"");
 		}
 
 		/// <summary>
@@ -103,7 +103,7 @@ namespace CurrencyBank
 		public void Payment(BankAccount sender, BankAccount receiver, long amount, string message = "")
 		{
 			Write("{0} paid {1} to {2}{3}", sender.AccountName, BankMain.FormatMoney(amount), receiver.AccountName,
-				string.IsNullOrWhiteSpace(message) ? "" : " with the message \"" + message + "\"");
+				String.IsNullOrWhiteSpace(message) ? "" : " with the message \"" + message + "\"");
 		}
 	}
 

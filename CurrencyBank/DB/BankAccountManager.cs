@@ -23,7 +23,7 @@ namespace CurrencyBank.DB
 			this.db = db;
 
 			var sql = new SqlTableCreator(db, db.GetSqlType() == SqlType.Sqlite ?
-				(IQueryBuilder)new SqliteQueryCreator() : (IQueryBuilder)new MysqlQueryCreator());
+				(IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
 
 			bool table = sql.EnsureTableStructure(new SqlTable("BankAccounts",
 				new SqlColumn("ID", MySqlDbType.Int32) { Primary = true },

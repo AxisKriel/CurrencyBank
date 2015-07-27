@@ -16,7 +16,7 @@ using Wolfje.Plugins.Jist.Framework;
 
 namespace CurrencyBank
 {
-	[ApiVersion(1, 17)]
+	[ApiVersion(1, 20)]
 	public class BankMain : TerrariaPlugin
 	{
 		public static BankAccountManager Bank { get; set; }
@@ -136,12 +136,12 @@ namespace CurrencyBank
 		{
 			BankAccount account;
 
-			if ((account = await Bank.GetAsync(e.Player.UserAccountName)) == null && e.Player.Group.HasPermission(Permissions.Permit))
+			if ((account = await Bank.GetAsync(e.Player.User.Name)) == null && e.Player.Group.HasPermission(Permissions.Permit))
 			{
-				if (!(await Bank.AddAsync(new BankAccount(e.Player.UserAccountName))))
-					TShock.Log.ConsoleError("[CurrencyBank] Unable to create bank account for " + e.Player.UserAccountName);
+				if (!(await Bank.AddAsync(new BankAccount(e.Player.User.Name))))
+					TShock.Log.ConsoleError("[CurrencyBank] Unable to create bank account for " + e.Player.User.Name);
 				else
-					TShock.Log.ConsoleInfo("[CurrencyBank] Bank account created for " + e.Player.UserAccountName);
+					TShock.Log.ConsoleInfo("[CurrencyBank] Bank account created for " + e.Player.User.Name);
 			}
 		}
 
@@ -160,18 +160,18 @@ namespace CurrencyBank
 		public static string FormatMoney(long money)
 		{
 			var sb = new StringBuilder();
-			if (BankMain.Config.UseShortName)
-				sb.Append(BankMain.Config.CurrencyNameShort);
+			if (Config.UseShortName)
+				sb.Append(Config.CurrencyNameShort);
 
 			sb.Append(money);
 
-			if (!BankMain.Config.UseShortName)
+			if (!Config.UseShortName)
 			{
 				sb.Append(" ");
 				if (money != 1)
-					sb.Append(BankMain.Config.CurrencyNamePlural);
+					sb.Append(Config.CurrencyNamePlural);
 				else
-					sb.Append(BankMain.Config.CurrencyName);
+					sb.Append(Config.CurrencyName);
 			}
 
 			return sb.ToString();
