@@ -15,7 +15,7 @@ using Wolfje.Plugins.Jist.Framework;
 
 namespace CurrencyBank
 {
-	[ApiVersion(1, 20)]
+	[ApiVersion(1, 21)]
 	public class BankMain : TerrariaPlugin
 	{
 		public static BankAccountManager Bank { get; set; }
