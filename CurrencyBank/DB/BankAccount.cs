@@ -1,4 +1,6 @@
-﻿namespace CurrencyBank.DB
+﻿using System.Threading.Tasks;
+
+namespace CurrencyBank.DB
 {
 	public class BankAccount
 	{
@@ -6,20 +8,16 @@
 
 		public long Balance { get; set; }
 
-		private int _id;
-		public int ID
-		{
-			get { return _id; }
-		}
+		public int ID { get; private set; }
 
 		public BankAccount(int id = 0)
 		{
-			_id = id;
+			ID = id;
 		}
 
 		public BankAccount(string accountName, long startingMoney = 0)
 		{
-			_id = BankMain.Bank.GenID();
+			Task.Run(async () => ID = await BankMain.Bank.GenID());
 			AccountName = accountName;
 			Balance = startingMoney;
 		}

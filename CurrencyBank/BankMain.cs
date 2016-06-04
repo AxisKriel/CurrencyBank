@@ -146,16 +146,10 @@ namespace CurrencyBank
 			}
 		}
 
-		async void OnReload(ReloadEventArgs e)
+		void OnReload(ReloadEventArgs e)
 		{
 			string cpath = Path.Combine(TShock.SavePath, "CurrencyBank", "Config.json");
 			Config = Config.Read(cpath);
-
-			if (await Bank.Reload())
-				e.Player.SendSuccessMessage($"{Tag} Database reloaded!");
-			else
-				e.Player.SendErrorMessage($"{Tag} Database reload failed! Check logs for details.");
-
 		}
 
 		public static string FormatMoney(long money)
