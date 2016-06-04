@@ -139,7 +139,8 @@ namespace CurrencyBank
 
 			if ((account = await Bank.GetAsync(e.Player.User.Name)) == null && e.Player.Group.HasPermission(Permissions.Permit))
 			{
-				if (!(await Bank.AddAsync(new BankAccount(e.Player.User.Name))))
+				BankAccount newAccount = await BankAccount.Create(e.Player.User.Name);
+				if (newAccount == null || !(await Bank.AddAsync(newAccount)))
 					TShock.Log.ConsoleError($"CurrencyBank: Unable to create bank account for \"{e.Player.User.Name}\".");
 				else
 					TShock.Log.ConsoleInfo($"CurrencyBank: Bank account created for \"{e.Player.User.Name}\".");

@@ -37,10 +37,19 @@ namespace CurrencyBank.DB
 			if (await GetCountAsync() >= MaxAccounts)
 				return false;
 
-			lock (syncLock)
+			try
 			{
-				return db.Query("INSERT INTO `BankAccounts` (`ID`, `AccountName`, `Balance`) VALUES (@0, @1, @2)",
-					account.ID, account.AccountName, account.Balance) == 1;
+				lock (syncLock)
+				{
+					return db.Query("INSERT INTO `BankAccounts` (`ID`, `AccountName`, `Balance`) VALUES (@0, @1, @2)",
+						account.ID, account.AccountName, account.Balance) == 1;
+				}
+			}
+			catch (Exception ex)
+			{
+				// Don't freak out
+				TShock.Log.Error(ex.ToString());
+				return false;
 			}
 		}
 
