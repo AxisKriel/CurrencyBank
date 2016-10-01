@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using CurrencyBank.DB;
 using TShockAPI;
 using Wolfje.Plugins.Jist;
@@ -351,7 +352,7 @@ namespace CurrencyBank
 			if (accountName == null || !(accountName is string))
 				return 0;
 
-			BankAccount account = Bank.GetAsync(accountName as string).Result;
+			BankAccount account = Bank.Get(accountName as string);
 			if (account == null)
 				return 0;
 

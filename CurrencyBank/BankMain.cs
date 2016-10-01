@@ -15,7 +15,7 @@ using Wolfje.Plugins.Jist.Framework;
 
 namespace CurrencyBank
 {
-	[ApiVersion(1, 23)]
+	[ApiVersion(1, 24)]
 	public class BankMain : TerrariaPlugin
 	{
 		public static BankAccountManager Bank { get; set; }
@@ -26,33 +26,20 @@ namespace CurrencyBank
 
 		public static BankLog Log { get; private set; }
 
-		internal static string Tag { get; } = TShock.Utils.ColorTag("CurrencyBank:", new Color(137, 73, 167));
+		internal static string Tag => TShock.Utils.ColorTag("CurrencyBank:", new Color(137, 73, 167));
 
-		public BankMain(Main game)
-			: base(game)
+		public BankMain(Main game) : base(game)
 		{
 			Order = 2;
 		}
 
-		public override string Author
-		{
-			get { return "Enerdy"; }
-		}
+		public override string Author => "Enerdy";
 
-		public override string Description
-		{
-			get { return "SBPlanet Economy Bank Module"; }
-		}
+		public override string Description => "SBPlanet Economy Bank Module";
 
-		public override string Name
-		{
-			get { return "CurrencyBank"; }
-		}
+		public override string Name => "CurrencyBank";
 
-		public override Version Version
-		{
-			get { return Assembly.GetExecutingAssembly().GetName().Version; }
-		}
+		public override Version Version => Assembly.GetExecutingAssembly().GetName().Version;
 
 		protected override void Dispose(bool disposing)
 		{

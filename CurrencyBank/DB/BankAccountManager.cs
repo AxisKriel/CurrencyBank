@@ -76,45 +76,47 @@ namespace CurrencyBank.DB
 			});
 		}
 
-		public Task<BankAccount> GetAsync(string accountIdent)
+		public BankAccount Get(string accountIdent)
 		{
 			if (String.IsNullOrWhiteSpace(accountIdent))
 				return null;
 
-			return Task.Run(() =>
+			int id;
+			bool isNum = Int32.TryParse(accountIdent, out id);
+			if (isNum)
 			{
-				int id;
-				bool isNum = Int32.TryParse(accountIdent, out id);
-				if (isNum)
+				using (var result = db.QueryReader("SELECT * FROM `BankAccounts` WHERE `ID` = @0", id))
 				{
-					using (var result = db.QueryReader("SELECT * FROM `BankAccounts` WHERE `ID` = @0", id))
+					if (result.Read())
 					{
-						if (result.Read())
+						return new BankAccount(id)
 						{
-							return new BankAccount(id)
-							{
-								AccountName = result.Get<string>("AccountName"),
-								Balance = result.Get<long>("Balance")
-							};
-						}
+							AccountName = result.Get<string>("AccountName"),
+							Balance = result.Get<long>("Balance")
+						};
 					}
 				}
-				else
+			}
+			else
+			{
+				using (var result = db.QueryReader("SELECT * FROM `BankAccounts` WHERE `AccountName` = @0", accountIdent))
 				{
-					using (var result = db.QueryReader("SELECT * FROM `BankAccounts` WHERE `AccountName` = @0", accountIdent))
+					if (result.Read())
 					{
-						if (result.Read())
+						return new BankAccount(result.Get<int>("ID"))
 						{
-							return new BankAccount(result.Get<int>("ID"))
-							{
-								AccountName = accountIdent,
-								Balance = result.Get<long>("Balance")
-							};
-						}
+							AccountName = accountIdent,
+							Balance = result.Get<long>("Balance")
+						};
 					}
 				}
-				return null;
-			});
+			}
+			return null;
+		}
+
+		public Task<BankAccount> GetAsync(string accountIdent)
+		{
+			return Task.Run(() => Get(accountIdent));
 		}
 
 		public Task<int> GetCountAsync()
