@@ -22,7 +22,7 @@ namespace CurrencyBank
 
 			var regex = new Regex(@"^(?:\w+|\w+ (bal(?:ance)?|give|help|info|pay|take)(?: ""(.+)""| ([^\s]+?))?(?: (\d*))?(?: (.+))?)$");
 			// Regex Groups:
-			// 0 - The entire match
+	 		// 0 - The entire match
 			// 1 - The switch
 			// 2 - AccountIdent if using quotes
 			// 3 - AccountIdent if using non-whitespace
@@ -328,35 +328,5 @@ namespace CurrencyBank
 
 			player.SendInfoMessage(sb.Append('.').ToString());
 		}
-	}
-
-	public class JistCommands : stdlib_base
-	{
-		protected JistEngine engine;
-
-		public JistCommands(JistEngine engine)
-			: base(engine)
-		{
-			this.engine = engine;
-			Provides = "currencybank";
-		}
-
-		/// <summary>
-		/// Returns a CurrencyBank's account balance.
-		/// </summary>
-		/// <param name="accountName">The accountname to look for.</param>
-		/// <returns>The account's balance.</returns>
-		[JavascriptFunction("currencybank_get_balance")]
-		public long GetBalance(object accountName)
-		{
-			if (accountName == null || !(accountName is string))
-				return 0;
-
-			BankAccount account = Bank.Get(accountName as string);
-			if (account == null)
-				return 0;
-
-			return account.Balance;
-		}
-	}
+	}	
 }

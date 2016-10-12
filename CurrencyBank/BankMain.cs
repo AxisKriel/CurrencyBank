@@ -10,12 +10,10 @@ using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
 using TShockAPI.Hooks;
-using Wolfje.Plugins.Jist;
-using Wolfje.Plugins.Jist.Framework;
 
 namespace CurrencyBank
 {
-	[ApiVersion(1, 24)]
+	[ApiVersion(1, 25)]
 	public class BankMain : TerrariaPlugin
 	{
 		public static BankAccountManager Bank { get; set; }
@@ -49,7 +47,6 @@ namespace CurrencyBank
 				AccountHooks.AccountDelete -= OnAccountDelete;
 				GeneralHooks.ReloadEvent -= OnReload;
 				PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
-				JistPlugin.JavascriptFunctionsNeeded -= OnJsFunctionsNeeded;
 			}
 		}
 
@@ -59,14 +56,6 @@ namespace CurrencyBank
 			AccountHooks.AccountDelete += OnAccountDelete;
 			GeneralHooks.ReloadEvent += OnReload;
 			PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
-			JistPlugin.JavascriptFunctionsNeeded += OnJsFunctionsNeeded;
-
-		}
-
-		void OnJsFunctionsNeeded(object sender, JavascriptFunctionsNeededEventArgs e)
-		{
-			JistCommands commands = new JistCommands(e.Engine);
-			e.Engine.LoadLibrary(commands);
 		}
 
 		void OnInitialize(EventArgs e)

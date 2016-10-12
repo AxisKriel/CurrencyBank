@@ -8,6 +8,7 @@ CurrencyBank/bin/HttpServer.dll
 *.xml
 *.suo
 *.user
+*.userprefs
 *.sln.docstates
 
 # Build results
@@ -43,6 +44,7 @@ dlldata.c
 *.obj
 *.pch
 *.pdb
+*.mdb
 *.pgc
 *.pgd
 *.rsp
