@@ -14,7 +14,7 @@ namespace CurrencyBank
 		/// <param name="accountName">The bank account name.</param>
 		/// <returns>True if an account by the given <paramref name="accountName"/> exists.</returns>
 		[JavascriptFunction("currencybank_account_exists")]
-		public static bool AccountExists(object accountName)
+		public bool AccountExists(object accountName)
 		{
 			if (accountName == null || !(accountName is string))
 				return false;
@@ -28,7 +28,7 @@ namespace CurrencyBank
 		/// <param name="accountName">The bank account name.</param>
 		/// <returns>The account's balance, or -1 if it couldn't be retrieved.</returns>
 		[JavascriptFunction("currencybank_get_balance")]
-		public static long GetBalance(object accountName)
+		public long GetBalance(object accountName)
 		{
 			if (accountName == null || !(accountName is string))
 				return -1;
@@ -55,7 +55,7 @@ namespace CurrencyBank
 		/// * A bank account could not be found by the given name.
 		/// </returns>
 		[JavascriptFunction("currencybank_give")]
-		public static bool Give(object accountName, object value)
+		public bool Give(object accountName, object value)
 		{
 			if (accountName == null || !(accountName is string))
 				return false;
@@ -99,7 +99,7 @@ namespace CurrencyBank
 		/// * A bank account could not be found by the given name.
 		/// </returns>
 		[JavascriptFunction("currencybank_take")]
-		public static bool Take(object accountName, object value)
+		public bool Take(object accountName, object value)
 		{
 			if (accountName == null || !(accountName is string))
 				return false;
