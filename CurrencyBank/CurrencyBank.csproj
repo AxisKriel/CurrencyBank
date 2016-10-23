@@ -84,6 +84,7 @@
     <Compile Include="DB\BankAccount.cs" />
     <Compile Include="DB\BankAccountManager.cs" />
     <Compile Include="BankLog.cs" />
+    <Compile Include="JistFunctions.cs" />
     <Compile Include="Permissions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

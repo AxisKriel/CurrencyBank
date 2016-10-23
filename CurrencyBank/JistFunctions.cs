@@ -6,8 +6,8 @@ using Wolfje.Plugins.Jist.Framework;
 
 namespace CurrencyBank
 {
-	[JavascriptProvidesAttribute("currencybank")]
-	public class JistCommands
+	[JavascriptProvides("currencybank")]
+	public class JistFunctions
 	{
 		/// <summary>
 		/// Determines whether a bank account by a given name exists.

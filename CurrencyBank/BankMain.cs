@@ -10,6 +10,8 @@ using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
 using TShockAPI.Hooks;
+using Wolfje.Plugins.Jist;
+using Wolfje.Plugins.Jist.Framework;
 
 namespace CurrencyBank
 {
@@ -46,6 +48,7 @@ namespace CurrencyBank
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
 				AccountHooks.AccountDelete -= OnAccountDelete;
 				GeneralHooks.ReloadEvent -= OnReload;
+				JistPlugin.JavascriptFunctionsNeeded -= OnJavascriptFunctionsNeeded;
 				PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
 			}
 		}
@@ -55,6 +58,7 @@ namespace CurrencyBank
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
 			AccountHooks.AccountDelete += OnAccountDelete;
 			GeneralHooks.ReloadEvent += OnReload;
+			JistPlugin.JavascriptFunctionsNeeded += OnJavascriptFunctionsNeeded;
 			PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
 		}
 
@@ -107,6 +111,12 @@ namespace CurrencyBank
 		{
 			if (await Bank.DelAsync(e.User.Name))
 				TShock.Log.ConsoleInfo($"CurrencyBank: Deleted bank account for \"{e.User.Name}\".");
+		}
+
+		void OnJavascriptFunctionsNeeded(object sender, JavascriptFunctionsNeededEventArgs e)
+		{
+			JistFunctions functions = new JistFunctions();
+			e.Engine.CreateScriptFunctions(functions.GetType(), functions);
 		}
 
 		async void OnPlayerPostLogin(PlayerPostLoginEventArgs e)
