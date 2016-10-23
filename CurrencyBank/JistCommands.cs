@@ -1,6 +1,7 @@
 using System;
-using System.Threading.Tasks;
 using CurrencyBank.DB;
+using Jint.Native;
+using Wolfje.Plugins.Jist;
 using Wolfje.Plugins.Jist.Framework;
 
 namespace CurrencyBank
@@ -47,41 +48,38 @@ namespace CurrencyBank
 		/// <br/>
 		/// <param name="value">The value to be added.</param>
 		/// <br/>
-		/// <returns>
-		/// True if the transaction completed successfully.
-		/// False is returned in one of the following situations:
-		/// * <paramref	name="accountName"/> is null or not a string;
-		/// * <paramref name="value"/> is null, negative or may not be parsed to an Int64;
-		/// * A bank account could not be found by the given name.
-		/// </returns>
-		[JavascriptFunction("currencybank_give")]
-		public bool Give(object accountName, object value)
+		/// <param name="callback">A callback function to be run after the transaction is completed.</param>
+		[JavascriptFunction("currencybank_give_async")]
+		public async void GiveAsync(object accountName, object value, JsValue callback)
 		{
 			if (accountName == null || !(accountName is string))
-				return false;
+				return;
 
 			long parsedValue = 0;
 			if (value == null || !Int64.TryParse(value as string, out parsedValue))
-				return false;
+				return;
 
 			// Value must amount to a positive influx
 			if (Math.Sign(parsedValue) != 1)
-				return false;
+				return;
 
 			BankAccount account = BankMain.Bank.Get(accountName as string);
 			if (account == null)
-				return false;
+				return;
 
+			bool success;
 			try
 			{
-				Task.Run(() => BankMain.Bank.ChangeByAsync(account.AccountName, parsedValue));
-				return true;
+				await BankMain.Bank.ChangeByAsync(account.AccountName, parsedValue);
+				success = true;
 			}
 			catch
 			{
 				// This and a few sanity checks above could take proper error handling
-				return false;
+				success = false;
 			}
+
+			JistPlugin.Instance.CallFunction(callback, null, success);
 		}
 
 		/// <summary>
@@ -91,41 +89,38 @@ namespace CurrencyBank
 		/// <br/>
 		/// <param name="value">The value to be taken.</param>
 		/// <br/>
-		/// <returns>
-		/// True if the transaction completed successfully.
-		/// False is returned in one of the following situations:
-		/// * <paramref	name="accountName"/> is null or not a string;
-		/// * <paramref name="value"/> is null, negative or may not be parsed to an Int64;
-		/// * A bank account could not be found by the given name.
-		/// </returns>
-		[JavascriptFunction("currencybank_take")]
-		public bool Take(object accountName, object value)
+		/// <param name="callback">A callback function to be run after the transaction is completed.</param>
+		[JavascriptFunction("currencybank_take_async")]
+		public async void TakeAsync(object accountName, object value, JsValue callback)
 		{
 			if (accountName == null || !(accountName is string))
-				return false;
+				return;
 
 			long parsedValue = 0;
 			if (value == null || !Int64.TryParse(value as string, out parsedValue))
-				return false;
+				return;
 
 			// Value must amount to a positive influx
 			if (Math.Sign(parsedValue) != 1)
-				return false;
+				return;
 
 			BankAccount account = BankMain.Bank.Get(accountName as string);
 			if (account == null)
-				return false;
+				return;
 
+			bool success;
 			try
 			{
-				Task.Run(() => BankMain.Bank.ChangeByAsync(account.AccountName, -parsedValue));
-				return true;
+				await BankMain.Bank.ChangeByAsync(account.AccountName, -parsedValue);
+				success = true;
 			}
 			catch
 			{
 				// This and a few sanity checks above could take proper error handling
-				return false;
+				success = false;
 			}
+
+			JistPlugin.Instance.CallFunction(callback, null, success);
 		}
 	}
 }
