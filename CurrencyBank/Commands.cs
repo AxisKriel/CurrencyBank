@@ -8,6 +8,7 @@ using TShockAPI;
 using Wolfje.Plugins.Jist;
 using Wolfje.Plugins.Jist.Framework;
 using Wolfje.Plugins.Jist.stdlib;
+using Microsoft.Xna.Framework;
 using static CurrencyBank.BankMain;
 
 namespace CurrencyBank

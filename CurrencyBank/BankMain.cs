@@ -12,10 +12,11 @@ using TShockAPI;
 using TShockAPI.Hooks;
 using Wolfje.Plugins.Jist;
 using Wolfje.Plugins.Jist.Framework;
+using Microsoft.Xna.Framework;
 
 namespace CurrencyBank
 {
-	[ApiVersion(1, 25)]
+	[ApiVersion(2, 0)]
 	public class BankMain : TerrariaPlugin
 	{
 		public static BankAccountManager Bank { get; set; }
