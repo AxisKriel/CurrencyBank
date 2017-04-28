@@ -16,7 +16,7 @@ using Microsoft.Xna.Framework;
 
 namespace CurrencyBank
 {
-	[ApiVersion(2, 0)]
+	[ApiVersion(2, 1)]
 	public class BankMain : TerrariaPlugin
 	{
 		public static BankAccountManager Bank { get; set; }
